@@ -120,6 +120,18 @@ tools = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_movie_details",
+            "description": "Get full details of a movie",
+            "parameters": {
+                "type": "object",
+                "properties": {"title": {"type": "string"}},
+                "required": ["title"],
+            },
+        },
+    },
 ]
 
 # =========================
@@ -151,6 +163,9 @@ def call_function(name, args):
 
     elif name == "top_movies":
         return services.top_movies(**args)
+
+    elif name == "get_movie_details":
+        return services.get_movie_details(**args)
 
     return "Unknown function"
 
@@ -243,6 +258,9 @@ def run_agent(query):
         if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict):
             return result
 
+        # single structured object
+        if isinstance(result, dict):
+            return result
         # If it's a normal list (strings), format nicely
         if isinstance(result, list):
             return [f"{r}" for r in result]

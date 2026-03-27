@@ -94,8 +94,8 @@ def process_and_insert():
             cur.execute(
                 """
                 INSERT INTO movies 
-                (title, genres, keywords, cast_members, director, tags, vote_average, vote_count)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (title, genres, keywords, cast_members, director, tags, vote_average, vote_count, overview)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT DO NOTHING
                 """,
                 (
@@ -107,6 +107,7 @@ def process_and_insert():
                     row["tags"],
                     row["vote_average"],
                     row["vote_count"],
+                    row["overview"],
                 ),
             )
             inserted += 1

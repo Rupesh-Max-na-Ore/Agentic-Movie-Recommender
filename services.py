@@ -296,7 +296,7 @@ def top_movies(keyword=None, top_n=10, verbose=False):
         if keyword:
             cur.execute(
                 """
-                SELECT title, vote_average, tags
+                SELECT title, vote_average, overview
                 FROM movies
                 WHERE tags ILIKE %s
                 ORDER BY vote_average DESC, vote_count DESC
@@ -307,7 +307,7 @@ def top_movies(keyword=None, top_n=10, verbose=False):
         else:
             cur.execute(
                 """
-                SELECT title, vote_average, tags
+                SELECT title, vote_average, overview
                 FROM movies
                 ORDER BY vote_average DESC, vote_count DESC
                 LIMIT %s
@@ -325,7 +325,7 @@ def top_movies(keyword=None, top_n=10, verbose=False):
                 {
                     "title": r[0],
                     "rating": round(r[1], 1) if r[1] is not None else "N/A",
-                    "tags": r[2][:200] if r[2] else "",
+                    "overview": r[2] if r[2] else "No description available",
                 }
                 for r in rows
             ]
@@ -333,6 +333,50 @@ def top_movies(keyword=None, top_n=10, verbose=False):
             return result
 
         return [r[0] for r in rows]
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_movie_details(title):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT 
+                title,
+                genres,
+                keywords,
+                cast_members,
+                director,
+                vote_average,
+                vote_count,
+                overview
+            FROM movies
+            WHERE title ILIKE %s
+            LIMIT 1
+            """,
+            (f"%{title}%",),
+        )
+
+        row = cur.fetchone()
+
+        if not row:
+            return "Movie not found"
+
+        return {
+            "title": row[0],
+            "rating": round(row[5], 1) if row[5] else "N/A",
+            "votes": row[6],
+            "genres": row[1],
+            "keywords": row[2],
+            "cast": row[3],
+            "director": row[4],
+            "overview": row[7],
+        }
 
     finally:
         cur.close()

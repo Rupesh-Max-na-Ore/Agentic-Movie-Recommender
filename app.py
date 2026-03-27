@@ -45,8 +45,42 @@ if "messages" not in st.session_state:
 
 for role, msg in st.session_state.messages:
     with st.chat_message(role):
-        st.write(msg)
+        # 🎯 HANDLE SINGLE MOVIE DETAILS
+        if isinstance(msg, dict) and "title" in msg:
+            st.markdown(f"""
+        ### 🎬 {msg["title"]}
 
+        ⭐ **Rating:** {msg["rating"]} ({msg["votes"]} votes)
+
+        🎭 **Genres:** {msg["genres"]}
+
+        🔑 **Keywords:** {msg["keywords"]}
+
+        👥 **Cast:** {msg["cast"]}
+
+        🎬 **Director:** {msg["director"]}
+
+        🧠 **Overview:**
+        {msg["overview"]}
+        """)
+
+        # 🎯 HANDLE STRUCTURED RESPONSE
+        elif isinstance(msg, list) and len(msg) > 0 and isinstance(msg[0], dict):
+            for movie in msg:
+                with st.expander(f"🎬 {movie['title']} (⭐ {movie['rating']})"):
+                    st.markdown(f"""
+**Overview:**
+{movie["overview"]}
+""")
+
+        # 🎯 HANDLE NORMAL LIST
+        elif isinstance(msg, list):
+            for r in msg:
+                st.write(f"• {r}")
+
+        # 🎯 HANDLE STRING
+        else:
+            st.write(msg)
 # =========================
 # USER INPUT
 # =========================
@@ -65,8 +99,27 @@ if user_input:
         with st.spinner("Thinking..."):
             response = run_agent(user_input)
 
-            # 🎯 HANDLE STRUCTURED (VERBOSE) RESPONSE
-            if (
+            # 🎯 HANDLE SINGLE MOVIE DETAILS
+            if isinstance(response, dict) and "title" in response:
+                st.markdown(f"""
+            ### 🎬 {response["title"]}
+
+            ⭐ **Rating:** {response["rating"]} ({response["votes"]} votes)
+
+            🎭 **Genres:** {response["genres"]}
+
+            🔑 **Keywords:** {response["keywords"]}
+
+            👥 **Cast:** {response["cast"]}
+
+            🎬 **Director:** {response["director"]}
+
+            🧠 **Overview:**
+            {response["overview"]}
+            """)
+
+            # 🎯 HANDLE STRUCTURED LIST (top_movies verbose)
+            elif (
                 isinstance(response, list)
                 and len(response) > 0
                 and isinstance(response[0], dict)
@@ -74,16 +127,16 @@ if user_input:
                 for movie in response:
                     with st.expander(f"🎬 {movie['title']} (⭐ {movie['rating']})"):
                         st.markdown(f"""
-    **Overview:**
-    {movie["tags"]}
-    """)
+            **Overview:**
+            {movie["overview"]}
+            """)
 
-            # 🎯 HANDLE NORMAL LIST RESPONSE
+            # 🎯 HANDLE NORMAL LIST
             elif isinstance(response, list):
                 for r in response:
                     st.write(f"• {r}")
 
-            # 🎯 HANDLE STRING RESPONSE
+            # 🎯 HANDLE STRING
             else:
                 st.write(response)
 
