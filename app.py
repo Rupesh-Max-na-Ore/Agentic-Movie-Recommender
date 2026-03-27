@@ -64,13 +64,30 @@ for role, msg in st.session_state.messages:
         {msg["overview"]}
         """)
 
-        # 🎯 HANDLE STRUCTURED RESPONSE
+        # 🎯 HANDLE WATCHLIST (list of dict with expectation)
+        elif (
+            isinstance(msg, list)
+            and len(msg) > 0
+            and isinstance(msg[0], dict)
+            and "expectation" in msg[0]
+        ):
+            for movie in msg:
+                with st.expander(f"🎬 {movie['title']}"):
+                    st.markdown(f"""
+        ⭐ **Expectation:** {movie["expectation"]}
+
+        ⏰ **Planned Time:** {movie["watch_time"]}
+        """)
+
+        # 🎯 HANDLE STRUCTURED RESPONSE/TOP Movies
         elif isinstance(msg, list) and len(msg) > 0 and isinstance(msg[0], dict):
             for movie in msg:
-                with st.expander(f"🎬 {movie['title']} (⭐ {movie['rating']})"):
+                with st.expander(
+                    f"🎬 {movie['title']} (⭐ {movie.get('rating', 'N/A')})"
+                ):
                     st.markdown(f"""
 **Overview:**
-{movie["overview"]}
+{movie.get("overview", "No description available")}
 """)
 
         # 🎯 HANDLE NORMAL LIST
@@ -118,6 +135,21 @@ if user_input:
             {response["overview"]}
             """)
 
+            # 🎯 HANDLE WATCHLIST (list of dict with expectation)
+            elif (
+                isinstance(response, list)
+                and len(response) > 0
+                and isinstance(response[0], dict)
+                and "expectation" in response[0]
+            ):
+                for movie in response:
+                    with st.expander(f"🎬 {movie['title']}"):
+                        st.markdown(f"""
+                    ⭐ **Expectation:** {movie["expectation"]}
+
+                    ⏰ **Planned Time:** {movie["watch_time"]}
+                    """)
+
             # 🎯 HANDLE STRUCTURED LIST (top_movies verbose)
             elif (
                 isinstance(response, list)
@@ -125,10 +157,12 @@ if user_input:
                 and isinstance(response[0], dict)
             ):
                 for movie in response:
-                    with st.expander(f"🎬 {movie['title']} (⭐ {movie['rating']})"):
+                    with st.expander(
+                        f"🎬 {movie['title']} (⭐ {movie.get('rating', 'N/A')})"
+                    ):
                         st.markdown(f"""
             **Overview:**
-            {movie["overview"]}
+            {movie.get("overview", "No description available")}
             """)
 
             # 🎯 HANDLE NORMAL LIST

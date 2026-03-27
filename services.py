@@ -1,7 +1,9 @@
 import os
 import pickle
+from datetime import datetime, timedelta
 
 import psycopg2
+from dateutil import parser
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -88,7 +90,7 @@ def get_connection():
 # =========================
 
 
-def add_to_watchlist(user, movie):
+def add_to_watchlist(user, movie, expectation=None, watch_time=None):
     conn = get_connection()
     cur = conn.cursor()
 
@@ -110,13 +112,15 @@ def add_to_watchlist(user, movie):
         movie_id = result[0]
 
         # Step 3: Insert into planned table
+        parsed_time = parse_watch_time(watch_time)
+
         cur.execute(
             """
-            INSERT INTO planned (user_username, movie_id, expectation)
-            VALUES (%s, %s, %s)
+            INSERT INTO planned (user_username, movie_id, expectation, watch_time)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT (user_username, movie_id) DO NOTHING
             """,
-            (user, movie_id, "Interested"),
+            (user, movie_id, expectation or "Interested", parsed_time),
         )
 
         conn.commit()
@@ -138,7 +142,7 @@ def get_watchlist(user):
     try:
         cur.execute(
             """
-            SELECT m.title
+            SELECT m.title, p.expectation, p.watch_time
             FROM planned p
             JOIN movies m ON p.movie_id = m.id
             WHERE p.user_username = %s
@@ -151,7 +155,16 @@ def get_watchlist(user):
         if not rows:
             return ["No movies in watchlist"]
 
-        return [r[0] for r in rows]
+        return [
+            {
+                "title": r[0],
+                "expectation": r[1],
+                "watch_time": r[2].strftime("%Y-%m-%d %H:%M")
+                if r[2]
+                else "Not scheduled",
+            }
+            for r in rows
+        ]
 
     except Exception as e:
         return [f"Error: {str(e)}"]
@@ -381,3 +394,46 @@ def get_movie_details(title):
     finally:
         cur.close()
         conn.close()
+
+
+def add_user(username):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            "INSERT INTO users (username) VALUES (%s) ON CONFLICT DO NOTHING",
+            (username,),
+        )
+
+        conn.commit()
+        return f"User '{username}' added successfully"
+
+    except Exception as e:
+        conn.rollback()
+        return f"Error: {str(e)}"
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def parse_watch_time(time_str):
+    if not time_str:
+        return None
+
+    try:
+        # Handle "tomorrow"
+        if "tomorrow" in time_str.lower():
+            base = datetime.now() + timedelta(days=1)
+            time_part = time_str.lower().replace("tomorrow", "").strip()
+            parsed_time = (
+                parser.parse(time_part).time() if time_part else datetime.now().time()
+            )
+            return datetime.combine(base.date(), parsed_time)
+
+        # General parsing
+        return parser.parse(time_str)
+
+    except Exception:
+        return None

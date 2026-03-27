@@ -46,7 +46,12 @@ tools = [
             "description": "Add a movie to a user's watchlist",
             "parameters": {
                 "type": "object",
-                "properties": {"user": {"type": "string"}, "movie": {"type": "string"}},
+                "properties": {
+                    "user": {"type": "string"},
+                    "movie": {"type": "string"},
+                    "expectation": {"type": "string"},
+                    "watch_time": {"type": "string"},
+                },
                 "required": ["user", "movie"],
             },
         },
@@ -132,6 +137,18 @@ tools = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_user",
+            "description": "Create a new user",
+            "parameters": {
+                "type": "object",
+                "properties": {"username": {"type": "string"}},
+                "required": ["username"],
+            },
+        },
+    },
 ]
 
 # =========================
@@ -166,6 +183,9 @@ def call_function(name, args):
 
     elif name == "get_movie_details":
         return services.get_movie_details(**args)
+
+    elif name == "add_user":
+        return services.add_user(**args)
 
     return "Unknown function"
 
@@ -209,6 +229,8 @@ def run_agent(query):
                     '6. If user asks for "top N movies", interpret it as highest rated movies\n'
                     "7. If user provides a keyword (like horror, action), filter using that\n"
                     '8. If user says "with details", "verbose", or "explain", set verbose=True\n'
+                    "9. If user mentions time (e.g., tomorrow, tonight, 7pm), include it as watch_time\n"
+                    "10. If user mentions expectation, include it as expectation\n"
                 ),
             },
             {"role": "user", "content": query},
