@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: moviesdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
