@@ -157,8 +157,19 @@ def run_agent(query):
             {
                 "role": "system",
                 "content": (
-                    "You are a movie assistant. Use tools when appropriate. "
-                    "If the user asks to add or view watchlist, always use tools."
+                    "You are an intelligent movie assistant that helps users manage movies.\n\n"
+                    "You can:\n"
+                    "- Recommend movies based on similarity\n"
+                    "- Search movies from database\n"
+                    "- Add movies with metadata (genre, cast, director)\n"
+                    "- Manage watchlist\n"
+                    "- Mark movies as watched\n\n"
+                    "Rules:\n"
+                    "1. Always use tools when user asks for actions (add, search, recommend, etc.)\n"
+                    "2. Be precise in extracting movie names and user names\n"
+                    "3. If metadata is mentioned, include it\n"
+                    "4. If user intent is unclear, ask a clarifying question\n"
+                    "5. Never hallucinate movie existence—use tools to verify\n"
                 ),
             },
             {"role": "user", "content": query},
@@ -173,6 +184,31 @@ def run_agent(query):
         name = tool_call.function.name
         args = json.loads(tool_call.function.arguments)
 
+        # 🧠 CLARIFICATION LOGIC
+
+        # add_movie requires movie_title
+        if name == "add_movie" and not args.get("movie_title"):
+            return "What is the movie name you want to add?"
+
+        # add_to_watchlist requires user + movie
+        if name == "add_to_watchlist":
+            if not args.get("user"):
+                return "Which user should I add the movie for?"
+            if not args.get("movie"):
+                return "Which movie do you want to add to the watchlist?"
+
+        # mark_as_watched requires user + movie
+        if name == "mark_as_watched":
+            if not args.get("user"):
+                return "Which user watched the movie?"
+            if not args.get("movie"):
+                return "Which movie should I mark as watched?"
+
+        # get_watchlist requires user
+        if name == "get_watchlist" and not args.get("user"):
+            return "Whose watchlist do you want to see?"
+
+        # ✅ If all arguments present → proceed
         result = call_function(name, args)
 
         log_interaction(query, name, result)
@@ -180,7 +216,7 @@ def run_agent(query):
         # For debugging
         # return f"[Tool: {name}] → {result}"
         if isinstance(result, list):
-            return "\n".join(result)
+            return "\n".join(f"• {r}" for r in result)
 
         return result
 
