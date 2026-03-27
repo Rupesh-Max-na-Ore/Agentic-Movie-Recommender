@@ -89,6 +89,49 @@ def process_and_insert():
 
     inserted = 0
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS movies (
+        id SERIAL PRIMARY KEY,
+        title TEXT UNIQUE,
+        genres TEXT,
+        keywords TEXT,
+        cast_members TEXT,
+        director TEXT,
+        tags TEXT,
+        vote_average FLOAT,
+        vote_count INTEGER,
+        overview TEXT
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        username TEXT PRIMARY KEY
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS planned (
+        user_username TEXT,
+        movie_id INTEGER,
+        expectation TEXT,
+        watch_time TIMESTAMP,
+        UNIQUE(user_username, movie_id)
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS watched (
+        user_username TEXT,
+        movie_id INTEGER,
+        review TEXT,
+        rating INTEGER,
+        UNIQUE(user_username, movie_id)
+    );
+    """)
+
+    conn.commit()
+
     for _, row in movies.iterrows():
         try:
             cur.execute(
@@ -113,7 +156,9 @@ def process_and_insert():
             inserted += 1
 
         except Exception as e:
+            conn.rollback()  # CRITICAL FIX
             print("Error inserting:", e)
+            break  # to see when fail
 
     conn.commit()
     cur.close()
