@@ -1,20 +1,36 @@
-version: '3.8'
+version: "3.9"
 
 services:
+  db:
+    image: postgres:15
+    container_name: movie_db
+    restart: always
+    environment:
+      POSTGRES_DB: moviesdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
   app:
     build: .
+    container_name: movie_app
+    depends_on:
+      - db
     ports:
       - "8501:8501"
     env_file:
       - .env
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15
     environment:
-      POSTGRES_DB: moviesdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
+      DB_NAME: moviesdb
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata:
