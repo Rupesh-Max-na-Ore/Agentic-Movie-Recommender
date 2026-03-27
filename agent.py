@@ -105,6 +105,32 @@ tools = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "filter_movies",
+            "description": "Get top movies by genre or keyword",
+            "parameters": {
+                "type": "object",
+                "properties": {"keyword": {"type": "string"}},
+                "required": ["keyword"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "top_movies",
+            "description": "Get top rated movies optionally filtered by keyword",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "keyword": {"type": "string"},
+                    "top_n": {"type": "integer"},
+                },
+            },
+        },
+    },
 ]
 
 # =========================
@@ -130,6 +156,12 @@ def call_function(name, args):
 
     elif name == "add_movie":
         return services.add_movie(**args)
+
+    elif name == "filter_movies":
+        return services.filter_movies(**args)
+
+    elif name == "top_movies":
+        return services.top_movies(**args)
 
     return "Unknown function"
 
@@ -170,6 +202,8 @@ def run_agent(query):
                     "3. If metadata is mentioned, include it\n"
                     "4. If user intent is unclear, ask a clarifying question\n"
                     "5. Never hallucinate movie existence—use tools to verify\n"
+                    '6. If user asks for "top N movies", interpret it as highest rated movies\n'
+                    "7. If user provides a keyword (like horror, action), filter using that\n"
                 ),
             },
             {"role": "user", "content": query},

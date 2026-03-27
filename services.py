@@ -50,7 +50,7 @@ def search_movies(query, top_n=5):
             """
             SELECT title
             FROM movies
-            WHERE title ILIKE %s
+            WHERE tags ILIKE %s
             LIMIT %s
             """,
             (f"%{query}%", top_n),
@@ -62,9 +62,6 @@ def search_movies(query, top_n=5):
             return ["No movies found"]
 
         return [r[0] for r in rows]
-
-    except Exception as e:
-        return [f"Error: {str(e)}"]
 
     finally:
         cur.close()
@@ -258,6 +255,72 @@ def add_movie(
     except Exception as e:
         conn.rollback()
         return f"Error: {str(e)}"
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def filter_movies(keyword, top_n=5):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT title
+            FROM movies
+            WHERE tags ILIKE %s
+            LIMIT %s
+            """,
+            (f"%{keyword}%", top_n),
+        )
+
+        rows = cur.fetchall()
+
+        if not rows:
+            return ["No matching movies found"]
+
+        return [r[0] for r in rows]
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def top_movies(keyword=None, top_n=10):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        if keyword:
+            cur.execute(
+                """
+                SELECT title
+                FROM movies
+                WHERE tags ILIKE %s
+                ORDER BY vote_average DESC, vote_count DESC
+                LIMIT %s
+                """,
+                (f"%{keyword}%", top_n),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT title
+                FROM movies
+                ORDER BY vote_average DESC, vote_count DESC
+                LIMIT %s
+                """,
+                (top_n,),
+            )
+
+        rows = cur.fetchall()
+
+        if not rows:
+            return ["No movies found"]
+
+        return [r[0] for r in rows]
 
     finally:
         cur.close()
