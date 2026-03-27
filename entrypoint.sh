@@ -13,6 +13,10 @@ echo "📦 Initializing database..."
 
 python data_processor.py
 
+echo "📥 Downloading model files..."
+
+python download_model.py
+
 echo "🚀 Starting Streamlit app..."
 
 streamlit run app.py --server.address=0.0.0.0

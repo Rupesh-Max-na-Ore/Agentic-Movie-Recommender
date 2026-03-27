@@ -5,3 +5,4 @@ scikit-learn
 psycopg2-binary
 openai
 python-dotenv
+requests
