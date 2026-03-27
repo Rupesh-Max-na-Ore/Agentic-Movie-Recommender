@@ -8,10 +8,11 @@ WORKDIR /app
 COPY . .
 
 # Install dependencies
+RUN apt-get update && apt-get install -y netcat-openbsd
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose Streamlit port
 EXPOSE 8501
 
 # Run app
-CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]
+CMD ["bash", "entrypoint.sh"]
