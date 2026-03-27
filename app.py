@@ -18,7 +18,26 @@ st.caption("AI-powered movie recommendations + watchlist manager")
 # =========================
 
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [
+        (
+            "assistant",
+            "👋 Welcome to your AI Movie Assistant!\n\n"
+            "Here’s what you can do:\n\n"
+            "🎥 Recommend movies:\n"
+            "→ 'Recommend movies like Inception'\n\n"
+            "🔍 Search movies:\n"
+            "→ 'Search Batman'\n\n"
+            "📌 Add to watchlist:\n"
+            "→ 'Add Inception to watchlist for Rupesh'\n\n"
+            "📋 View watchlist:\n"
+            "→ 'Show watchlist for Rupesh'\n\n"
+            "✅ Mark as watched:\n"
+            "→ 'Mark Inception as watched for Rupesh'\n\n"
+            "📝 Add your own movies:\n"
+            "→ 'Add a new movie called XYZ'\n\n"
+            "Just type naturally—I’ll handle the rest!",
+        )
+    ]
 
 # =========================
 # DISPLAY CHAT HISTORY

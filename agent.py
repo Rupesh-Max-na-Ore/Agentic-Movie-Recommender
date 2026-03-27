@@ -75,6 +75,36 @@ tools = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_movie",
+            "description": "Add a new movie to the database",
+            "parameters": {
+                "type": "object",
+                "properties": {"movie_title": {"type": "string"}},
+                "required": ["movie_title"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_movie",
+            "description": "Add a new movie with optional metadata",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "movie_title": {"type": "string"},
+                    "genres": {"type": "string"},
+                    "keywords": {"type": "string"},
+                    "cast_members": {"type": "string"},
+                    "director": {"type": "string"},
+                },
+                "required": ["movie_title"],
+            },
+        },
+    },
 ]
 
 # =========================
@@ -97,6 +127,9 @@ def call_function(name, args):
 
     elif name == "mark_as_watched":
         return services.mark_as_watched(**args)
+
+    elif name == "add_movie":
+        return services.add_movie(**args)
 
     return "Unknown function"
 

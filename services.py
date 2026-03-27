@@ -20,9 +20,17 @@ similarity = pickle.load(open("recommender/similarity.pkl", "rb"))
 
 def recommend_movies(title, top_n=5):
     try:
+        # Step 1: Check if movie exists in recommender dataset
+        if title not in movies["title"].values:
+            return [
+                "This movie is not in the recommendation system yet, but you can still track it in your watchlist."
+            ]
+
+        # Step 2: Get index
         idx = movies[movies["title"] == title].index[0]
         distances = similarity[idx]
 
+        # Step 3: Get top recommendations
         movie_list = sorted(
             list(enumerate(distances)), reverse=True, key=lambda x: x[1]
         )[1 : top_n + 1]
@@ -34,8 +42,33 @@ def recommend_movies(title, top_n=5):
 
 
 def search_movies(query, top_n=5):
-    results = movies[movies["title"].str.contains(query, case=False, na=False)]
-    return results["title"].head(top_n).tolist()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT title
+            FROM movies
+            WHERE title ILIKE %s
+            LIMIT %s
+            """,
+            (f"%{query}%", top_n),
+        )
+
+        rows = cur.fetchall()
+
+        if not rows:
+            return ["No movies found"]
+
+        return [r[0] for r in rows]
+
+    except Exception as e:
+        return [f"Error: {str(e)}"]
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 # =========================
@@ -173,6 +206,54 @@ def mark_as_watched(user, movie, review="Good", rating=5):
 
         conn.commit()
         return f"{movie} marked as watched for {user}"
+
+    except Exception as e:
+        conn.rollback()
+        return f"Error: {str(e)}"
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def add_movie(
+    movie_title, genres=None, keywords=None, cast_members=None, director=None
+):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        # Step 1: Check if movie already exists
+        cur.execute(
+            "SELECT id FROM movies WHERE title ILIKE %s LIMIT 1", (f"%{movie_title}%",)
+        )
+        existing = cur.fetchone()
+
+        if existing:
+            return f"Movie '{movie_title}' already exists in database"
+
+        # Step 2: Insert movie
+        cur.execute(
+            """
+            INSERT INTO movies (title, genres, keywords, cast_members, director)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (movie_title, genres, keywords, cast_members, director),
+        )
+
+        # 🔥 IMPORTANT: commit AFTER insert
+        conn.commit()
+
+        # Step 3: Verify insertion (debug check)
+        cur.execute(
+            "SELECT title FROM movies WHERE title ILIKE %s", (f"%{movie_title}%",)
+        )
+        verify = cur.fetchone()
+
+        if verify:
+            return f"Movie '{movie_title}' added successfully with metadata."
+        else:
+            return "Insert failed unexpectedly"
 
     except Exception as e:
         conn.rollback()
