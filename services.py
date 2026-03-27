@@ -21,7 +21,7 @@ similarity = pickle.load(open("recommender/similarity.pkl", "rb"))
 def recommend_movies(title, top_n=5):
     try:
         # Step 1: Check if movie exists in recommender dataset
-        if title not in movies["title"].values:
+        if title.lower() not in movies["title"].str.lower().values:
             return [
                 "This movie is not in the recommendation system yet, but you can still track it in your watchlist."
             ]
@@ -288,7 +288,7 @@ def filter_movies(keyword, top_n=5):
         conn.close()
 
 
-def top_movies(keyword=None, top_n=10):
+def top_movies(keyword=None, top_n=10, verbose=False):
     conn = get_connection()
     cur = conn.cursor()
 
@@ -296,7 +296,7 @@ def top_movies(keyword=None, top_n=10):
         if keyword:
             cur.execute(
                 """
-                SELECT title
+                SELECT title, vote_average, tags
                 FROM movies
                 WHERE tags ILIKE %s
                 ORDER BY vote_average DESC, vote_count DESC
@@ -307,7 +307,7 @@ def top_movies(keyword=None, top_n=10):
         else:
             cur.execute(
                 """
-                SELECT title
+                SELECT title, vote_average, tags
                 FROM movies
                 ORDER BY vote_average DESC, vote_count DESC
                 LIMIT %s
@@ -319,6 +319,18 @@ def top_movies(keyword=None, top_n=10):
 
         if not rows:
             return ["No movies found"]
+
+        if verbose:
+            result = [
+                {
+                    "title": r[0],
+                    "rating": round(r[1], 1) if r[1] is not None else "N/A",
+                    "tags": r[2][:200] if r[2] else "",
+                }
+                for r in rows
+            ]
+
+            return result
 
         return [r[0] for r in rows]
 

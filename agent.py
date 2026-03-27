@@ -79,18 +79,6 @@ tools = [
         "type": "function",
         "function": {
             "name": "add_movie",
-            "description": "Add a new movie to the database",
-            "parameters": {
-                "type": "object",
-                "properties": {"movie_title": {"type": "string"}},
-                "required": ["movie_title"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "add_movie",
             "description": "Add a new movie with optional metadata",
             "parameters": {
                 "type": "object",
@@ -127,6 +115,7 @@ tools = [
                 "properties": {
                     "keyword": {"type": "string"},
                     "top_n": {"type": "integer"},
+                    "verbose": {"type": "boolean"},
                 },
             },
         },
@@ -204,6 +193,7 @@ def run_agent(query):
                     "5. Never hallucinate movie existence—use tools to verify\n"
                     '6. If user asks for "top N movies", interpret it as highest rated movies\n'
                     "7. If user provides a keyword (like horror, action), filter using that\n"
+                    '8. If user says "with details", "verbose", or "explain", set verbose=True\n'
                 ),
             },
             {"role": "user", "content": query},
@@ -249,8 +239,13 @@ def run_agent(query):
 
         # For debugging
         # return f"[Tool: {name}] → {result}"
+        # If it's structured (list of dicts), return as-is
+        if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict):
+            return result
+
+        # If it's a normal list (strings), format nicely
         if isinstance(result, list):
-            return "\n".join(f"• {r}" for r in result)
+            return [f"{r}" for r in result]
 
         return result
 

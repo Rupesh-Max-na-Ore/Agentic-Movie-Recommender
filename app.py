@@ -64,7 +64,28 @@ if user_input:
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             response = run_agent(user_input)
-            st.write(response)
+
+            # 🎯 HANDLE STRUCTURED (VERBOSE) RESPONSE
+            if (
+                isinstance(response, list)
+                and len(response) > 0
+                and isinstance(response[0], dict)
+            ):
+                for movie in response:
+                    with st.expander(f"🎬 {movie['title']} (⭐ {movie['rating']})"):
+                        st.markdown(f"""
+    **Overview:**
+    {movie["tags"]}
+    """)
+
+            # 🎯 HANDLE NORMAL LIST RESPONSE
+            elif isinstance(response, list):
+                for r in response:
+                    st.write(f"• {r}")
+
+            # 🎯 HANDLE STRING RESPONSE
+            else:
+                st.write(response)
 
     # Store assistant response
     st.session_state.messages.append(("assistant", response))
