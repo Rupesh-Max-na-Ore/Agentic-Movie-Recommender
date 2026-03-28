@@ -64,6 +64,12 @@ def process_and_insert():
     cur = conn.cursor()
 
     create_tables(cur)
+    conn.commit()
+
+    print("🧹 Clearing old data...")
+    cur.execute("DELETE FROM movies;")
+    conn.commit()
+
     print("🚀 Inserting into database...")
 
     inserted = 0
@@ -113,12 +119,25 @@ def process_and_insert():
 
     for _, row in movies.iterrows():
         try:
+            overview = row.get("overview")
+
+            if not overview or str(overview).strip() == "":
+                overview = "No description available"
+
             cur.execute(
                 """
                 INSERT INTO movies 
                 (title, genres, keywords, cast_members, director, tags, vote_average, vote_count, overview)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (title) DO UPDATE SET
+                overview = EXCLUDED.overview,
+                genres = EXCLUDED.genres,
+                keywords = EXCLUDED.keywords,
+                cast_members = EXCLUDED.cast_members,
+                director = EXCLUDED.director,
+                tags = EXCLUDED.tags,
+                vote_average = EXCLUDED.vote_average,
+                vote_count = EXCLUDED.vote_count;
                 """,
                 (
                     row["title"],
@@ -129,7 +148,7 @@ def process_and_insert():
                     row.get("tags", ""),
                     row.get("vote_average", 0),
                     row.get("vote_count", 0),
-                    row.get("overview", ""),
+                    overview,
                 ),
             )
             inserted += 1
