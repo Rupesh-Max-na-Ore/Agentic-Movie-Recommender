@@ -1,7 +1,6 @@
 import ast
 import os
 
-import pandas as pd
 import psycopg2
 from dotenv import load_dotenv
 
@@ -52,34 +51,11 @@ def fetch_director(obj):
 # MAIN PROCESSOR
 # ---------------------------
 def process_and_insert():
-    print("📥 Loading datasets...")
+    import pickle
 
-    movies = pd.read_csv("data/tmdb_5000_movies.csv")
-    credits = pd.read_csv("data/tmdb_5000_credits.csv")
+    print("📥 Loading processed data...")
 
-    print("🔗 Merging datasets...")
-    movies = movies.merge(credits, on="title")
-
-    print("🧠 Processing features...")
-
-    movies["genres"] = movies["genres"].apply(convert)
-    movies["keywords"] = movies["keywords"].apply(convert)
-    movies["cast"] = movies["cast"].apply(fetch_cast)
-    movies["director"] = movies["crew"].apply(fetch_director)
-
-    movies["overview"] = movies["overview"].fillna("")
-
-    movies["tags"] = (
-        movies["overview"]
-        + " "
-        + movies["genres"].apply(lambda x: " ".join(x))
-        + " "
-        + movies["keywords"].apply(lambda x: " ".join(x))
-        + " "
-        + movies["cast"].apply(lambda x: " ".join(x))
-        + " "
-        + movies["director"].fillna("")
-    )
+    movies = pickle.load(open("movies.pkl", "rb"))
 
     print("🗄️ Connecting to database...")
     conn = get_connection()
@@ -143,14 +119,14 @@ def process_and_insert():
                 """,
                 (
                     row["title"],
-                    " ".join(row["genres"]),
-                    " ".join(row["keywords"]),
-                    " ".join(row["cast"]),
-                    row["director"],
-                    row["tags"],
-                    row["vote_average"],
-                    row["vote_count"],
-                    row["overview"],
+                    row.get("genres", ""),
+                    row.get("keywords", ""),
+                    row.get("cast", ""),
+                    row.get("director", ""),
+                    row.get("tags", ""),
+                    row.get("vote_average", 0),
+                    row.get("vote_count", 0),
+                    row.get("overview", ""),
                 ),
             )
             inserted += 1
