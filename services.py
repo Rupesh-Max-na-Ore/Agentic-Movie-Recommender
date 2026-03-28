@@ -1,5 +1,4 @@
 import os
-import pickle
 from datetime import datetime, timedelta
 
 import psycopg2
@@ -12,8 +11,29 @@ load_dotenv()
 # LOAD RECOMMENDER DATA
 # =========================
 
-movies = pickle.load(open("recommender/movies.pkl", "rb"))
-similarity = pickle.load(open("recommender/similarity.pkl", "rb"))
+movies = None
+similarity = None
+
+
+def load_models():
+    global movies, similarity
+    import os
+    import pickle
+    import time
+
+    # 🔥 WAIT until files exist
+    while not (
+        os.path.exists("recommender/movies.pkl")
+        and os.path.exists("recommender/similarity.pkl")
+    ):
+        print("⏳ Waiting for model files to be available...")
+        time.sleep(2)
+
+    if movies is None or similarity is None:
+        print("📥 Loading model files...")
+        movies = pickle.load(open("recommender/movies.pkl", "rb"))
+        similarity = pickle.load(open("recommender/similarity.pkl", "rb"))
+
 
 # =========================
 # RECOMMENDER FUNCTIONS
@@ -21,6 +41,7 @@ similarity = pickle.load(open("recommender/similarity.pkl", "rb"))
 
 
 def recommend_movies(title, top_n=5):
+    load_models()
     try:
         # Step 1: Check if movie exists in recommender dataset
         if title.lower() not in movies["title"].str.lower().values:
@@ -44,6 +65,7 @@ def recommend_movies(title, top_n=5):
 
 
 def search_movies(query, top_n=5):
+    load_models()
     conn = get_connection()
     cur = conn.cursor()
 
@@ -302,6 +324,7 @@ def filter_movies(keyword, top_n=5):
 
 
 def top_movies(keyword=None, top_n=10, verbose=False):
+    load_models()
     conn = get_connection()
     cur = conn.cursor()
 
@@ -353,6 +376,7 @@ def top_movies(keyword=None, top_n=10, verbose=False):
 
 
 def get_movie_details(title):
+    load_models()
     conn = get_connection()
     cur = conn.cursor()
 
