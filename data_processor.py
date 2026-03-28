@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+print("🚀 DATA PROCESSOR STARTED")
+
 
 # ---------------------------
 # DB CONNECTION
@@ -61,6 +63,7 @@ def process_and_insert():
     conn = get_connection()
     cur = conn.cursor()
 
+    create_tables(cur)
     print("🚀 Inserting into database...")
 
     inserted = 0
@@ -141,6 +144,49 @@ def process_and_insert():
     conn.close()
 
     print(f"✅ Done! Inserted approx {inserted} movies.")
+
+
+def create_tables(cur):
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS movies (
+        id SERIAL PRIMARY KEY,
+        title TEXT UNIQUE,
+        genres TEXT,
+        keywords TEXT,
+        cast_members TEXT,
+        director TEXT,
+        tags TEXT,
+        vote_average FLOAT,
+        vote_count INTEGER,
+        overview TEXT
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        username TEXT PRIMARY KEY
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS planned (
+        user_username TEXT,
+        movie_id INTEGER,
+        expectation TEXT,
+        watch_time TIMESTAMP,
+        UNIQUE(user_username, movie_id)
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS watched (
+        user_username TEXT,
+        movie_id INTEGER,
+        review TEXT,
+        rating INTEGER,
+        UNIQUE(user_username, movie_id)
+    );
+    """)
 
 
 # ---------------------------
