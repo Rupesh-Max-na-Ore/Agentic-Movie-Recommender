@@ -57,7 +57,7 @@ def process_and_insert():
 
     print("📥 Loading processed data...")
 
-    movies = pickle.load(open("movies.pkl", "rb"))
+    movies = pickle.load(open("recommender/movies.pkl", "rb"))
 
     print("🗄️ Connecting to database...")
     conn = get_connection()

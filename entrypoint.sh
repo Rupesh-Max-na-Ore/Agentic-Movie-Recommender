@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo "📥 Downloading model files..."
+
+python download_model.py
+
 echo "⏳ Waiting for PostgreSQL..."
 
 # Wait until DB is ready
@@ -13,9 +17,7 @@ echo "📦 Initializing database..."
 
 python data_processor.py
 
-echo "📥 Downloading model files..."
 
-python download_model.py
 
 echo "🚀 Starting Streamlit app..."
 
