@@ -412,7 +412,7 @@ def get_movie_details(title):
             "keywords": row[2],
             "cast": row[3],
             "director": row[4],
-            "overview": row[7],
+            "overview": row[7] if row[7] else row[1] or "No description available",
         }
 
     finally:

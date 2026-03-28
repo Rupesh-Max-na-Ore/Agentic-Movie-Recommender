@@ -5,7 +5,7 @@ import gdown
 # Create directory
 os.makedirs("recommender", exist_ok=True)
 
-MOVIES_ID = "1F5SenFGD0HXtZzo1H6AZkXWUS4Yab7Yp"
+MOVIES_ID = "1CUThvHOHn2guyux058PwchxOQ-cQtHvU"
 SIMILARITY_ID = "18caxCr4BLi1Bw_uu8EoEZ5uAcoe4pNEH"
 
 
