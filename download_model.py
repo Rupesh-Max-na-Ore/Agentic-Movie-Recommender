@@ -16,12 +16,11 @@ def download_file(url, filename):
 
 
 # 🔥 PUT YOUR LINKS HERE
-MOVIES_URL = (
-    "https://drive.google.com/file/d/1F5SenFGD0HXtZzo1H6AZkXWUS4Yab7Yp/view?usp=sharing"
-)
-SIMILARITY_URL = (
-    "https://drive.google.com/file/d/18caxCr4BLi1Bw_uu8EoEZ5uAcoe4pNEH/view?usp=sharing"
-)
+MOVIES_URL = "https://drive.google.com/uc?id=1F5SenFGD0HXtZzo1H6AZkXWUS4Yab7Yp"
+SIMILARITY_URL = "https://drive.google.com/uc?id=18caxCr4BLi1Bw_uu8EoEZ5uAcoe4pNEH"
 
-download_file(MOVIES_URL, "movies.pkl")
-download_file(SIMILARITY_URL, "similarity.pkl")
+# Ensure directory exists
+os.makedirs("recommender", exist_ok=True)
+
+download_file(MOVIES_URL, "recommender/movies.pkl")
+download_file(SIMILARITY_URL, "recommender/similarity.pkl")
