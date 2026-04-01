@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 import services
+from rate_limiter import is_rate_limited
 
 load_dotenv()
 
@@ -207,6 +208,12 @@ def log_interaction(query, tool, result):
 
 
 def run_agent(query):
+    # 🔥 RATE LIMIT CHECK
+    user_id = "global_user"  # simple demo-safe
+
+    if is_rate_limited(user_id):
+        return "⚠️ Too many requests. Please wait a minute before trying again."
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
