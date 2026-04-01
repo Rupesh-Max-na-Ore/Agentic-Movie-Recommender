@@ -1,6 +1,9 @@
 import time
+from collections import defaultdict
 
 import redis
+
+local_store = defaultdict(list)
 
 # Connect to Redis (Docker service name = redis)
 r = redis.Redis(host="redis", port=6379, decode_responses=True)
@@ -15,33 +18,30 @@ def get_redis():
 
 
 def is_rate_limited(user_id: str, limit: int = 20, window: int = 90) -> bool:
-    """
-    Sliding window rate limiter.
-
-    Args:
-        user_id: unique identifier
-        limit: max requests allowed
-        window: time window in seconds
-    """
-
     client = get_redis()
+    current_time = int(time.time())
 
-    # Fail-open (important for demo)
-    if client is None:
+    # ✅ If Redis available → use it
+    if client:
+        key = f"rate:{user_id}"
+        client.zremrangebyscore(key, 0, current_time - window)
+        count = client.zcard(key)
+
+        if count >= limit:
+            return True
+
+        client.zadd(key, {f"{current_time}-{time.time()}": current_time})
+        client.expire(key, window)
         return False
 
-    current_time = int(time.time())
-    key = f"rate:{user_id}"
+    # FALLBACK: in-memory limiter
+    timestamps = local_store[user_id]
 
-    client.zremrangebyscore(key, 0, current_time - window)
-    request_count = client.zcard(key)
+    # remove old
+    local_store[user_id] = [t for t in timestamps if t > current_time - window]
 
-    if request_count >= limit:
+    if len(local_store[user_id]) >= limit:
         return True
 
-    # Add request with unique member
-    client.zadd(key, {f"{current_time}-{time.time()}": current_time})
-
-    client.expire(key, window)
-
+    local_store[user_id].append(current_time)
     return False
